@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Chat</title>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .message-box {
+                @apply border rounded-lg p-3 my-2 max-w-[80%] break-words;
+            }
+            .user-message {
+                @apply bg-blue-50 self-end ml-auto;
+            }
+            .other-message {
+                @apply bg-gray-100 self-start mr-auto;
+            }
+            .system-message {
+                @apply bg-gray-200 text-gray-600 text-sm self-center mx-auto;
+            }
+        }
+    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 font-sans">
+<div class="container mx-auto max-w-3xl p-4">
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="bg-blue-600 text-white p-4">
+            <h1 class="text-2xl font-bold">WebSocket Chat</h1>
+            <div class="flex items-center mt-2">
+                <span id="connection-status" class="inline-block w-3 h-3 rounded-full bg-red-500 mr-2"></span>
+                <span id="status-text">未连接</span>
+            </div>
+        </div>
+
+        <div class="flex flex-col p-4 h-[500px] overflow-hidden">
+            <div id="username-container" class="mb-4">
+                <label for="username" class="block text-sm font-medium text-gray-700">用户名:</label>
+                <div class="flex items-center">
+                    <input type="text" id="username" placeholder="输入你的用户名"
+                           class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           value="游客">
+                    <button onclick="setUsername()" class="ml-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                        设置
+                    </button>
+                </div>
+            </div>
+
+            <div id="messages" class="flex-1 overflow-y-auto bg-gray-50 rounded-lg p-3 space-y-2">
+                <div class="system-message">欢迎使用WebSocket聊天系统，请先设置用户名</div>
+            </div>
+
+            <div class="mt-4">
+                <div class="flex">
+                    <input type="text" id="message" placeholder="输入消息..."
+                           class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           disabled>
+                    <button onclick="sendMessage()" id="send-button"
+                            class="px-4 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled>
+                        发送
+                    </button>
+                </div>
+                <div class="flex mt-2 gap-2">
+                    <button onclick="sendQuickMessage('666666666')"
+                            class="flex-1 px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">
+                        快速发送
+                    </button>
+                    <button onclick="resetConnection()"
+                            class="flex-1 px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">
+                        重连
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="application/javascript">
+    let websocket;
+    let username;
+    let connectionAttempts = 0;
+    let maxAttempts = 5;
+    let reconnectInterval = 3000; // 初始重连间隔3秒
+    let reconnectTimer;
+    let isConnected = false;
+
+    // 服务器配置
+    const SERVER_URL = 'ws://127.0.0.1:8080/ws/server'; // 云服务器地址
+
+    // 初始化
+    window.onload = function() {
+        if (!'WebSocket' in window) {
+            showSystemMessage('错误：你的浏览器不支持WebSocket', true);
+            return;
+        }
+
+        // 生成随机用户名
+        const MAX_NUM = 999999;
+        const MIN_NUM = 100000;
+        username = "游客" + Math.floor(Math.random() * (MAX_NUM - MIN_NUM) + MIN_NUM);
+        document.getElementById("username").value = username;
+
+        // 设置事件监听
+        document.getElementById("message").addEventListener("keypress", function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // 初始化连接
+        setUsername();
+    };
+
+    // 设置用户名并连接
+    function setUsername() {
+        username = document.getElementById('username').value.trim();
+        if (!username) {
+            username = "游客" + Math.floor(Math.random() * 900000 + 100000);
+            document.getElementById("username").value = username;
+        }
+
+        // 如果已连接，先关闭再重新连接
+        if (websocket && websocket.readyState !== WebSocket.CLOSED) {
+            websocket.close();
+        }
+
+        // 重置重连状态
+        connectionAttempts = 0;
+        clearTimeout(reconnectTimer);
+
+        // 建立新连接
+        webSocketInit();
+    }
+
+    // 初始化WebSocket连接
+    function webSocketInit() {
+        try {
+            // 显示连接中状态
+            updateConnectionStatus(false);
+            showSystemMessage(`正在连接到服务器...`, false);
+
+            // 构建连接URL
+            const url = `${SERVER_URL}?username=${encodeURIComponent(username)}`;
+            websocket = new WebSocket(url);
+
+            // 连接成功
+            websocket.onopen = function() {
+                isConnected = true;
+                connectionAttempts = 0;
+                updateConnectionStatus(true);
+                showSystemMessage(`已连接到服务器`, false);
+
+                // 启用输入框
+                document.getElementById("message").disabled = false;
+                document.getElementById("send-button").disabled = false;
+            };
+
+            // 接收消息
+            websocket.onmessage = function(event) {
+                try {
+                    // 尝试解析JSON数据
+                    const data = JSON.parse(event.data);
+
+                    // 处理不同类型的消息
+                    if (data.type === 'system') {
+                        showSystemMessage(data.content, data.isError);
+                    } else {
+                        addMessage(data.sender, data.content);
+                    }
+                } catch (e) {
+                    // 如果不是JSON格式，使用原始内容
+                    console.log("收到非JSON格式消息:", event.data);
+                    processTextMessage(event.data);
+                }
+            };
+
+            // 连接错误
+            websocket.onerror = function(error) {
+                console.error("WebSocket错误:", error);
+                showSystemMessage(`连接发生错误: ${error.message || '未知错误'}`, true);
+                updateConnectionStatus(false);
+            };
+
+            // 连接关闭
+            websocket.onclose = function(event) {
+                isConnected = false;
+                updateConnectionStatus(false);
+
+                // 关闭时禁用输入
+                document.getElementById("message").disabled = true;
+                document.getElementById("send-button").disabled = true;
+
+                // 显示关闭信息
+                const reason = event.reason || "未指定原因";
+                showSystemMessage(`连接已关闭 (代码: ${event.code}, 原因: ${reason})`, event.code !== 1000);
+
+                // 自动重连
+                scheduleReconnect();
+            };
+
+            // 窗口关闭时关闭连接
+            window.onbeforeunload = function() {
+                if (websocket) {
+                    websocket.close();
+                }
+            };
+        } catch (error) {
+            console.error("WebSocket初始化失败:", error);
+            showSystemMessage(`WebSocket初始化失败: ${error.message}`, true);
+            updateConnectionStatus(false);
+            scheduleReconnect();
+        }
+    }
+
+    // 安排重连
+    function scheduleReconnect() {
+        if (connectionAttempts >= maxAttempts) {
+            showSystemMessage(`已达到最大重连次数 (${maxAttempts})，请手动重试`, true);
+            return;
+        }
+
+        connectionAttempts++;
+        const delay = reconnectInterval * Math.min(1, connectionAttempts); // 指数退避
+
+        showSystemMessage(`将在 ${delay/1000} 秒后尝试重连 (${connectionAttempts}/${maxAttempts})`, false);
+
+        reconnectTimer = setTimeout(() => {
+            webSocketInit();
+        }, delay);
+    }
+
+    // 重置连接
+    function resetConnection() {
+        clearTimeout(reconnectTimer);
+        connectionAttempts = 0;
+
+        if (websocket && websocket.readyState !== WebSocket.CLOSED) {
+            websocket.close();
+        }
+
+        webSocketInit();
+    }
+
+    // 发送消息
+    function sendMessage() {
+        const messageInput = document.getElementById('message');
+        const message = messageInput.value.trim();
+
+        if (!message) return;
+
+        if (websocket && websocket.readyState === WebSocket.OPEN) {
+            try {
+                // 发送消息
+                websocket.send(message);
+
+                // 添加到本地消息框
+                addMessage(username, message);
+
+                // 清空输入框
+                messageInput.value = '';
+                messageInput.focus();
+            } catch (error) {
+                showSystemMessage(`发送消息失败: ${error.message}`, true);
+            }
+        } else {
+            showSystemMessage("错误：连接已断开，请等待重连或手动重置", true);
+        }
+    }
+
+    // 发送快速消息
+    function sendQuickMessage(content) {
+        if (websocket && websocket.readyState === WebSocket.OPEN) {
+            websocket.send(content);
+            addMessage(username, content);
+        }
+    }
+
+    // 处理文本消息（兼容旧格式）
+    function processTextMessage(content) {
+        try {
+            // 尝试解析"用户名:消息"格式
+            const parts = content.split(":", 2);
+
+            if (parts.length >= 2) {
+                const sender = parts[0].trim();
+                const message = parts[1].trim();
+                addMessage(sender, message);
+            } else {
+                // 如果没有冒号，视为系统消息
+                showSystemMessage(content, false);
+            }
+        } catch (e) {
+            // 解析失败，直接显示原始内容
+            showSystemMessage(content, false);
+        }
+    }
+
+    // 添加普通消息
+    function addMessage(sender, message) {
+        const messagesDiv = document.getElementById('messages');
+        const isOwnMessage = sender === username;
+
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message-box ${isOwnMessage ? 'user-message' : 'other-message'}`;
+
+        if (sender) {
+            messageDiv.innerHTML = `<strong>${sender}:</strong> ${message}`;
+        } else {
+            messageDiv.textContent = message;
+        }
+
+        messagesDiv.appendChild(messageDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    // 显示系统消息
+    function showSystemMessage(message, isError) {
+        const messagesDiv = document.getElementById('messages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message-box system-message';
+
+        if (isError) {
+            messageDiv.classList.add('text-red-600');
+            messageDiv.innerHTML = `<span class="font-bold">错误:</span> ${message}`;
+        } else {
+            messageDiv.textContent = message;
+        }
+
+        messagesDiv.appendChild(messageDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    // 更新连接状态
+    function updateConnectionStatus(connected) {
+        const statusElement = document.getElementById('connection-status');
+        const statusText = document.getElementById('status-text');
+
+        if (connected) {
+            statusElement.className = 'inline-block w-3 h-3 rounded-full bg-green-500 mr-2';
+            statusText.textContent = '已连接';
+            statusText.className = 'text-green-500';
+        } else {
+            statusElement.className = 'inline-block w-3 h-3 rounded-full bg-red-500 mr-2';
+            statusText.textContent = '未连接';
+            statusText.className = 'text-red-500';
+        }
+    }
+</script>
+</body>
+</html>
