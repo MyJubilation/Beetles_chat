@@ -98,6 +98,7 @@
         }
 
         console.log("userArgent: " + navigator.userAgent);
+        // Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0
 
         // 生成随机用户名
         const MAX_NUM = 999999;
@@ -165,16 +166,19 @@
                 try {
                     // 尝试解析JSON数据
                     const data = JSON.parse(event.data);
+                    console.log("收到data消息:", data);
 
                     // 处理不同类型的消息
                     if (data.type === 'system') {
                         showSystemMessage(data.content, data.isError);
                     } else {
                         addMessage(data.sender, data.content);
+                        console.log("收到消息:", data.content);
                     }
                 } catch (e) {
                     // 如果不是JSON格式，使用原始内容
                     console.log("收到非JSON格式消息:", event.data);
+                    console.log("收到event:", event);
                     processTextMessage(event.data);
                 }
             };
@@ -259,7 +263,7 @@
                 websocket.send(message);
 
                 // 添加到本地消息框
-                addMessage(username, message);
+                // addMessage(username, message);
 
                 // 清空输入框
                 messageInput.value = '';
@@ -276,7 +280,7 @@
     function sendQuickMessage(content) {
         if (websocket && websocket.readyState === WebSocket.OPEN) {
             websocket.send(content);
-            addMessage(username, content);
+            // addMessage(username, content);
         }
     }
 
