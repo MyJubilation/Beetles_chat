@@ -1,5 +1,6 @@
 package com.beetles.config;
 
+import com.beetles.ws.MyWebSocketHandler;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;

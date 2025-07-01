@@ -1,4 +1,4 @@
-package com.beetles.config;
+package com.beetles.ws;
 
 import org.springframework.stereotype.Component;
 import jakarta.websocket.*;

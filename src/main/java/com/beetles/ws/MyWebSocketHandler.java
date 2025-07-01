@@ -1,4 +1,4 @@
-package com.beetles.config;
+package com.beetles.ws;
 
 import org.springframework.web.socket.*;
 import java.io.IOException;

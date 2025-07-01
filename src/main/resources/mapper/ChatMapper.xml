@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.beetles.mapper.ChatMapper">
+
+<!--    <select id="getFriendList"  resultType="map">-->
+<!--        SELECT-->
+<!--            id, userName-->
+<!--        FROM-->
+<!--            user-->
+<!--    </select>-->
+
+
+    <insert id="sendChatMessage">
+        INSERT INTO message_tb(user_id, friend_id, message, create_time, update_time) VALUES (#{userId}, #{friendId}, #{chatMessage}, NOW(), NOW())
+    </insert>
+</mapper>
