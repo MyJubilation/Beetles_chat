@@ -1,0 +1,13 @@
+export declare const CDN_IDS: {
+    hljs: string;
+    hlcss: string;
+    prettier: string;
+    prettierMD: string;
+    cropperjs: string;
+    croppercss: string;
+    screenfull: string;
+    mermaidM: string;
+    mermaid: string;
+    katexjs: string;
+    katexcss: string;
+};

@@ -1,0 +1,25 @@
+{
+  "name": "vue3_cli_default",
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
+    "@kangc/v-md-editor": "^2.3.18",
+    "@vueuse/core": "^13.3.0",
+    "axios": "^1.10.0",
+    "element-plus": "^2.9.11",
+    "md-editor-v3": "^5.7.0",
+    "vditor": "^3.11.1",
+    "vue": "^3.2.8",
+    "vue-router": "^4.5.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^1.10.2",
+    "@vue/compiler-sfc": "^3.2.6",
+    "vite": "^2.9.18"
+  }
+}
