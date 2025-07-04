@@ -15,6 +15,7 @@ import java.util.UUID;
  */
 public class JwtUtil {
     static final Long OneHour = 60 * 60 * 1000L; // 60 * 60 *1000 一个小时
+    static final Long OneDay = OneHour * 24;
     //有效期为
     public static final Long JWT_TTL = OneHour;
     //设置秘钥明文
@@ -56,7 +57,7 @@ public class JwtUtil {
         return Jwts.builder()
                 .setId(uuid) //唯一的ID
                 .setSubject(subject) // 主题 可以是JSON数据
-                .setIssuer("sg") // 签发者
+                .setIssuer("beetles") // 签发者
                 .setIssuedAt(now) // 签发时间
                 .signWith(signatureAlgorithm, secretKey) //使用HS256对称加密算法签 名, 第二个参数为秘钥
                 .setExpiration(expDate);
@@ -74,8 +75,8 @@ public class JwtUtil {
     }
     public static void main(String[] args) throws Exception {
         String token =
-                "eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJjYWM2ZDVhZi1mNjVlLTQ0MDAtYjcxMi0zYWEwOGIyOTIwYj" +
-                        "QiLCJzdWIiOiJzZyIsImlzcyI6InNnIiwiaWF0IjoxNjM4MTA2NzEyLCJleHAiOjE2MzgxMTAzMTJ9.JVsSbkP94wuczb4QryQbAke3ysBDIL5ou8fWsbt_ebg";
+                "eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJjYWM2ZDVhZi1mNjVlLTQ0MDAtYjcxMi0zYWEwOGIyO" +
+                        "TIwYjQiLCJzdWIiOiJiZWV0bGVzIiwiaXNzIjoiYmVldGxlcyIsImlhdCI6MTYzODEwNjcxMiwiZXhwIjoxNjM4MTEwMzEyfQ.Ueg-kRVJW2vEJtQwwr2Oioy6qAs9aiMdk6LgFVT0ot8";
         Claims claims = parseJWT(token);
         System.out.println(claims);
     }

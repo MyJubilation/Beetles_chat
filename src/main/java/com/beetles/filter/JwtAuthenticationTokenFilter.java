@@ -35,7 +35,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         }
 
         //获取token
-        String token = request.getHeader("token");
+        String token = request.getHeader("JWT_Token");
         if (!StringUtils.hasText(token)) {
             //放行
             filterChain.doFilter(request, response);
@@ -59,7 +59,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
             throw new RuntimeException("用户未登录或者登录超时，请重新登录");
         }
         //存入SecurityContextHolder
-        //TODO 获取权限信息封装到Authentication中
+        //获取权限信息封装到Authentication中
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(loginUser,null,null);
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
