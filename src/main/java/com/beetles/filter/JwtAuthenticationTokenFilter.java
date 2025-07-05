@@ -35,10 +35,12 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         }
 
         //获取token
-        String token = request.getHeader("JWT_Token");
+        String token = request.getHeader("Jwttoken");
+        System.out.println("Jwttoken:"+token);
         if (!StringUtils.hasText(token)) {
             //放行
             filterChain.doFilter(request, response);
+            System.out.println("token为空");
             return;
         }
         //解析token

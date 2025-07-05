@@ -69,7 +69,7 @@ public class WebSocket {
                 }
                 // 将消息发送给目标客户端
                 // 发送定向消息
-                Session targetSession = clientMap.get(String.valueOf(userId));
+                Session targetSession = clientMap.get(String.valueOf(friendId));
                 if (targetSession != null && targetSession.isOpen()) {
                     Message msg = new Message("message", String.valueOf(userId), String.valueOf(userId),content);
                     targetSession.getBasicRemote().sendText(JSONObject.toJSONString(msg));
