@@ -44,6 +44,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(authorize -> authorize
                     // 允许匿名访问登录接口
                     .requestMatchers("/login").anonymous()
+                    // 允许匿名访问注册接口
+                    .requestMatchers("/register").permitAll()
                     // 允许WebSocket连接（例如 /webSocket）
                     .requestMatchers("/webSocket").permitAll()
                     // 其他所有请求需要认证

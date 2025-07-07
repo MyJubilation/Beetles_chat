@@ -5,10 +5,7 @@ import com.beetles.DTO.Result;
 import com.beetles.service.LoginService;
 import com.beetles.DTO.User;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class LoginController {
@@ -22,9 +19,14 @@ public class LoginController {
         return loginServcie.login(user);
     }
 
-    @PostMapping("/logout")
+    @GetMapping("/logout")
     public Result<?> logout(){
         return loginServcie.logout();
+    }
+
+    @RequestMapping("/register")
+    public Result<?> register(@RequestBody User user){
+        return loginServcie.register(user);
     }
 
 }
