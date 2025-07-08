@@ -1,5 +1,6 @@
 # Beetles_chat
 > 代码在master分支
+> 前端部分代码在仓库 [甲虫微聊](https://github.com/MyJubilation/Beetles_Chatroom_front)
 
 聊天室代码
 
